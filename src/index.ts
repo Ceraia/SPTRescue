@@ -34,8 +34,8 @@ client.on('interactionCreate', async (interaction) => {
     } else if (interaction.isButton()) {
         if (interaction.customId == 'rescue') {
             if (interaction.member?.permissions instanceof PermissionsBitField && interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-                await interaction.update({ content: '🔍 Finding container with label `SPTRESCUE=true`...', components: [] });
-                exec(`docker ps --filter "label=SPTRESCUE=true" --format "{{.ID}}"`, (error, stdout, stderr) => {
+                await interaction.update({ content: '🔍 Finding container with label `com.ceraia.sptrescue=true`...', components: [] });
+                exec(`docker ps --filter "label=com.ceraia.sptrescue=true" --format "{{.ID}}"`, (error, stdout, stderr) => {
                     if (error || stderr) {
                         console.error(`Error: ${error?.message || stderr}`);
                         interaction.editReply({ content: `❌ Error finding the container: ${error?.message || stderr}` });
@@ -44,7 +44,7 @@ client.on('interactionCreate', async (interaction) => {
 
                     const containerId = stdout.trim();
                     if (!containerId) {
-                        interaction.editReply({ content: `⚠️ No running container found with label \`SPTRESCUE=true\`.` });
+                        interaction.editReply({ content: `⚠️ No running container found with label \`com.ceraia.sptrescue=true\`.` });
                         return;
                     }
 
