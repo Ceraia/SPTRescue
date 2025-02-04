@@ -7,5 +7,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - AUTHORIZED_USER_ID=${AUTHORIZED_USER_ID}
     restart: unless-stopped

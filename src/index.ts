@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, GatewayIntentBits, SlashCommandBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, GatewayIntentBits, PermissionFlagsBits, PermissionsBitField, SlashCommandBuilder } from 'discord.js';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
 
@@ -6,7 +6,6 @@ dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const TOKEN = process.env.DISCORD_TOKEN;
-const AUTHORIZED_USER_ID = process.env.AUTHORIZED_USER_ID;
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user?.tag}`);
@@ -34,7 +33,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     } else if (interaction.isButton()) {
         if (interaction.customId == 'rescue') {
-            if (interaction.user.id == AUTHORIZED_USER_ID) {
+            if (interaction.member?.permissions instanceof PermissionsBitField && interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
                 await interaction.update({ content: '🔍 Finding container with label `SPTRESCUE=true`...', components: [] });
                 exec(`docker ps --filter "label=SPTRESCUE=true" --format "{{.ID}}"`, (error, stdout, stderr) => {
                     if (error || stderr) {
