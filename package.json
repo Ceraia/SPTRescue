@@ -1,4 +1,7 @@
 {
+  "name": "sptrescue",
+  "main": "src/index.ts",
+  "type": "module",
   "dependencies": {
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7"
