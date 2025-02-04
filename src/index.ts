@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, GatewayIntentBits, SlashCommandBuilder } from 'discord.js';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
 
@@ -10,39 +10,59 @@ const AUTHORIZED_USER_ID = process.env.AUTHORIZED_USER_ID;
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user?.tag}`);
+    client.application?.commands.create(
+        new SlashCommandBuilder().setName('rescue').setDescription('Rescue the SPT Client (ONLY USE IN CASE OF EMERGENCY)')
+    );
 });
 
-client.on('messageCreate', (message) => {
-    if (message.author.bot) return;
+client.on('interactionCreate', async (interaction) => {
+    if (interaction.isCommand()) {
+        if (interaction.commandName == 'rescue') {
+            await interaction.deferReply();
+            await interaction.editReply({
+                content: '‼️Are you sure you want to rescue the SPT Client? This will kick anyone who is in a match using the dedicated client‼️\n-# Only use if you know what you are doing!',
+                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId('rescue').setLabel('Wait...').setStyle(ButtonStyle.Danger).setDisabled(true))]
+            }).then((
+                msg
+            ) => {
+                setTimeout(() => {
+                    msg.edit({
+                        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId('rescue').setLabel('Rescue').setStyle(ButtonStyle.Danger))]
+                    });
+                }, 5000);
+            })
+        }
+    } else if (interaction.isButton()) {
+        if (interaction.customId == 'rescue') {
+            if (interaction.user.id == AUTHORIZED_USER_ID) {
+                await interaction.update({ content: '🔍 Finding container with label `SPTRESCUE=true`...', components: [] });
+                exec(`docker ps --filter "label=SPTRESCUE=true" --format "{{.ID}}"`, (error, stdout, stderr) => {
+                    if (error || stderr) {
+                        console.error(`Error: ${error?.message || stderr}`);
+                        interaction.editReply({ content: `❌ Error finding the container: ${error?.message || stderr}` });
+                        return;
+                    }
 
-    if (message.content === '!rescue' && message.author.id === AUTHORIZED_USER_ID) {
-        message.reply(`🔍 Finding container with label \`SPTRESCUE=true\`...`);
+                    const containerId = stdout.trim();
+                    if (!containerId) {
+                        interaction.editReply({ content: `⚠️ No running container found with label \`SPTRESCUE=true\`.` });
+                        return;
+                    }
 
-        // Find the container by label
-        exec(`docker ps --filter "label=SPTRESCUE=true" --format "{{.ID}}"`, (error, stdout, stderr) => {
-            if (error || stderr) {
-                console.error(`Error: ${error?.message || stderr}`);
-                message.reply(`❌ Error finding the container: ${error?.message || stderr}`);
-                return;
+                    interaction.editReply({ content: `🔄 Rebooting container \`${containerId}\`...` });
+                    exec(`docker restart ${containerId}`, (restartError, _restartStdout, restartStderr) => {
+                        if (restartError || restartStderr) {
+                            console.error(`Restart Error: ${restartError?.message || restartStderr}`);
+                            interaction.editReply({ content: `❌ Failed to reboot container: ${restartError?.message || restartStderr}` });
+                            return;
+                        }
+                        interaction.editReply({ content: `✅ Successfully rebooted container \`${containerId}\`.` });
+                    });
+                });
+            } else {
+                await interaction.update({ content: '❌ You are not authorized to perform this action.', components: [] });
             }
-
-            const containerId = stdout.trim();
-            if (!containerId) {
-                message.reply(`⚠️ No running container found with label \`SPTRESCUE=true\`.`);
-                return;
-            }
-
-            // Restart the found container
-            message.reply(`🔄 Rebooting container \`${containerId}\`...`);
-            exec(`docker restart ${containerId}`, (restartError, _restartStdout, restartStderr) => {
-                if (restartError || restartStderr) {
-                    console.error(`Restart Error: ${restartError?.message || restartStderr}`);
-                    message.reply(`❌ Failed to reboot container: ${restartError?.message || restartStderr}`);
-                    return;
-                }
-                message.reply(`✅ Successfully rebooted container \`${containerId}\`.`);
-            });
-        });
+        }
     }
 });
 
