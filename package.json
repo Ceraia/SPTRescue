@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7"
+  },
+  "scripts": {
+    "start": "bun run .",
+    "dev": "bun run --watch .",
+    "build": "tsc",
+    "lint": "eslint src/** ",
+    "lint:fix": "eslint --fix src/** ",
+    "check": "bun run format && bun run lint:fix && bun run build"
+  }
+}
