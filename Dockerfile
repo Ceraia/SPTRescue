@@ -1,6 +1,6 @@
 FROM oven/bun:alpine
 
-# Copy project fukes
+# Copy project
 COPY . .
 
 # Mount docker socket

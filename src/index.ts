@@ -9,6 +9,11 @@ const TOKEN = process.env.DISCORD_TOKEN;
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user?.tag}`);
+    client.application?.commands.fetch().then((commands) => {
+        commands.forEach((command) => {
+            if (command.name !== 'rescue') command.delete().catch(() => { });
+        });
+    });
     client.application?.commands.create(
         new SlashCommandBuilder().setName('rescue').setDescription('Rescue the SPT Client (ONLY USE IN CASE OF EMERGENCY)')
     );
